@@ -53,15 +53,34 @@ function setProgress(percent) {
     }
 }
 
-// --- AUTHENTIFICATION ---
+/// --- AUTHENTIFICATION SÉCURISÉE ---
 async function loadDatabase() {
     const status = document.getElementById('load-status');
     try {
-        const response = await fetch(SAMS_CONFIG.API_URL);
+        // Ajout d'un timeout de 10 secondes pour ne pas attendre indéfiniment
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const response = await fetch(SAMS_CONFIG.API_URL, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error(`Erreur Serveur: ${response.status}`);
+
         AGENTS_DATABASE = await response.json();
-        status.innerHTML = '<span style="color:#22c55e">● SYSTÈME SYNCHRONISÉ</span>';
+        
+        // Vérification si la base n'est pas vide
+        if (Object.keys(AGENTS_DATABASE).length === 0) {
+            status.innerHTML = '<span style="color:#f59e0b">● BASE DE DONNÉES VIDE</span>';
+        } else {
+            status.innerHTML = '<span style="color:#22c55e">● SYSTÈME SYNCHRONISÉ</span>';
+        }
     } catch (e) {
-        status.innerHTML = '<span style="color:#ef4444">● MODE HORS-LIGNE</span>';
+        console.error("Erreur SAMS:", e);
+        if (e.name === 'AbortError') {
+            status.innerHTML = '<span style="color:#ef4444">● TIMEOUT (CONNEXION LENTE)</span>';
+        } else {
+            status.innerHTML = '<span style="color:#ef4444">● ERREUR LIAISON SAMS-DATA</span>';
+        }
     }
 }
 
