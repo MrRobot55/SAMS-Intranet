@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMS - Central Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a;      /* Bleu nuit */
+            --accent: #ef4444;       /* Rouge Urgence */
+            --sidebar-width: 260px;
+            --text-light: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; background: #e2e8f0; }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--primary);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .brand {
+            padding: 30px;
+            font-size: 24px;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand span { color: var(--accent); }
+
+        .menu { flex: 1; padding: 20px 0; display: flex; flex-direction: column; gap: 5px; }
+
+        .menu-item {
+            padding: 15px 30px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+            color: var(--text-muted);
+            border-left: 4px solid transparent;
+            text-decoration: none;
+        }
+
+        .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .menu-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--accent); }
+        .menu-item i { width: 20px; text-align: center; }
+
+        .footer { padding: 20px; font-size: 11px; color: var(--text-muted); text-align: center; border-top: 1px solid rgba(255,255,255,0.1); }
+
+        /* --- MAIN CONTENT --- */
+        .content { flex: 1; position: relative; display: flex; flex-direction: column; }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none; /* Caché par défaut */
+            background: white;
+        }
+        
+        iframe.visible { display: block; animation: fadeIn 0.5s; }
+
+        /* --- ACCUEIL (Défaut) --- */
+        #home-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+        }
+        .hero-title { font-size: 3rem; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
+        .hero-sub { color: #64748b; font-size: 1.2rem; max-width: 600px; line-height: 1.5; }
+        .btn-start {
+            margin-top: 30px; padding: 15px 40px; background: var(--accent); color: white;
+            font-weight: 700; border-radius: 50px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+        }
+        .btn-start:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(239, 68, 68, 0.4); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Indicateur de chargement */
+        #loader {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            display: none; color: var(--primary); font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">🏥 SAMS <span>Hub</span></div>
+        <div class="menu">
+            <div class="menu-item active" onclick="showHome(this)">
+                🏠 Accueil
+            </div>
+            <div class="menu-item" onclick="loadApp('INTRANET', this)">
+                🚑 Intranet Médical
+            </div>
+            <div class="menu-item" onclick="loadApp('PORTAIL', this)">
+                👤 Mon Espace Pro
+            </div>
+            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 10px 20px;"></div>
+            <div class="menu-item" onclick="loadApp('RH', this)">
+                🔐 Administration RH
+            </div>
+        </div>
+        <div class="footer">
+            SAMS System v2.0<br>© 2026 RedStart
+        </div>
+    </div>
+
+    <div class="content">
+        
+        <div id="home-screen">
+            <div style="font-size: 5rem; margin-bottom: 20px;">🏥</div>
+            <div class="hero-title">San Andreas Medical Service</div>
+            <div class="hero-sub">Bienvenue sur le hub centralisé du SAMS.<br>Sélectionnez un outil dans le menu pour commencer votre service.</div>
+            <div class="btn-start" onclick="loadApp('INTRANET', document.querySelectorAll('.menu-item')[1])">COMMENCER LE SERVICE</div>
+        </div>
+
+        <div id="loader">Chargement de l'application...</div>
+
+        <iframe id="appFrame" src=""></iframe>
+    </div>
+
+    <script>
+        // ======================================================
+        // 👇 CONFIGURATION DES LIENS (COLLE TES URLS ICI) 👇
+        // ======================================================
+        const URLS = {
+            INTRANET: "https://script.google.com/macros/s/AKfycbyIzrij_g4cEUDL_dh5WnagZIurQmjk5T15UO95ajLNFoGoBi831ChHJRhYutQ10DrjGw/exec",
+            PORTAIL:  "https://script.google.com/macros/s/AKfycby3yCxL7GvyczMm_sed0L0BOc4WggECSVJnI7_6vyWnirABIZv69WlrRNwOzhU4DX8/exec",
+            RH:       "https://script.google.com/macros/s/Ton-Lien-RH-ICI/exec"
+        };
+        // ======================================================
+
+        const frame = document.getElementById('appFrame');
+        const home = document.getElementById('home-screen');
+        const loader = document.getElementById('loader');
+
+        function loadApp(appKey, el) {
+            // Gestion active menu
+            document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+            if(el) el.classList.add('active');
+
+            // Animation interface
+            home.style.display = 'none';
+            frame.classList.remove('visible');
+            loader.style.display = 'block';
+
+            // Chargement URL
+            const url = URLS[appKey];
+            if(url && url.includes("http")) {
+                frame.src = url;
+                frame.onload = () => {
+                    loader.style.display = 'none';
+                    frame.classList.add('visible');
+                };
+            } else {
+                alert("L'URL pour " + appKey + " n'est pas encore configurée dans le fichier index.html !");
+                loader.style.display = 'none';
+                showHome();
+            }
+        }
+
+        function showHome(el) {
+            document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+            if(el) el.classList.add('active'); // Sécurité si el est undefined
+            else document.querySelectorAll('.menu-item')[0].classList.add('active');
+
+            frame.classList.remove('visible');
+            frame.src = "about:blank"; // Reset iframe
+            home.style.display = 'flex';
+        }
+    </script>
+
+</body>
+</html>
